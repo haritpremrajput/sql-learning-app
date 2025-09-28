@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Learning Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Simple transition for a smoother UI */
+        .transition-all {
+            transition: all 0.3s ease-in-out;
+        }
+        /* Custom scrollbar for the code blocks */
+        pre::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        pre::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        pre::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        pre::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* Ensure code wraps within the pre block */
+        pre code {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex items-center justify-center min-h-screen p-4">
+
+    <div id="app-container" class="w-full max-w-3xl mx-auto">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-slate-900">SQL Learning Platform</h1>
+            <p class="text-slate-600 mt-2">Test your SQL knowledge with the questions below.</p>
+        </header>
+
+        <!-- Quiz Section -->
+        <div id="quiz-section">
+            <!-- Progress Tracker -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span id="progress-text" class="text-sm font-medium text-slate-700">Question 0 of 0</span>
+                    <span id="completion-text" class="text-sm font-medium text-slate-700">0% Complete</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-slate-900 mb-2">Question:</h2>
+                    <p id="question-text" class="text-slate-700 leading-relaxed"></p>
+                </div>
+                
+                <!-- Answer Section -->
+                <div id="answer-wrapper" class="hidden">
+                     <h3 class="text-md font-semibold text-slate-900 mb-2">Answer:</h3>
+                     <pre class="bg-slate-900 text-white p-4 rounded-lg overflow-x-auto"><code id="answer-text" class="language-sql"></code></pre>
+                </div>
+
+                <!-- Action Button -->
+                 <button id="toggle-answer-btn" class="w-full mt-6 bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
+                    Show Answer
+                </button>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between items-center mt-6">
+                <button id="prev-btn" class="bg-white border border-slate-300 text-slate-700 font-semibold py-2 px-6 rounded-lg hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                    Previous
+                </button>
+                <button id="next-btn" class="bg-white border border-slate-300 text-slate-700 font-semibold py-2 px-6 rounded-lg hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                    Next
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pre-loaded question data
+        const questionsData = [
+            { question: "How do you create a new database in MySQL?", answer: "CREATE DATABASE database_name;" },
+            { question: "How do you create a new table in MySQL?", answer: "CREATE TABLE table_name (\n    column1 datatype1,\n    column2 datatype2,\n    ...\n);" },
+            { question: "How do you insert values into a table?", answer: "INSERT INTO table_name (column1, column2, ...)\nVALUES (value1, value2, ...);" },
+            { question: "How do you retrieve all the columns from a table?", answer: "SELECT * FROM table_name;" },
+            { question: "How can you retrieve specific columns from a table?", answer: "SELECT column1, column2 FROM table_name;" },
+            { question: "What is the use of the WHERE clause?", answer: "To filter records based on specific conditions." },
+            { question: "How would you fetch data from a table where the age is greater than 25?", answer: "SELECT * FROM table_name WHERE age > 25;" },
+            { question: "What are the different types of SQL JOINs?", answer: "INNER JOIN, LEFT (or LEFT OUTER) JOIN, RIGHT (or RIGHT OUTER) JOIN, and FULL (or FULL OUTER) JOIN." },
+            { question: "Write a SQL query to join two tables: students and courses, assuming each student is enrolled in a course and they share a common column course_id.", answer: "SELECT * FROM students \nINNER JOIN courses \nON students.course_id = courses.course_id;" },
+            { question: "What is the difference between the HAVING clause and the WHERE clause?", answer: "WHERE filters records before aggregating in GROUP BY, whereas HAVING filters after aggregation." },
+            { question: "How would you list the number of students enrolled in each course, but only display courses with more than 5 students?", answer: "SELECT course_id, COUNT(student_id) as number_of_students \nFROM enrollments \nGROUP BY course_id \nHAVING number_of_students > 5;" },
+            { question: "What is the LIKE operator used for?", answer: "To search for a specified pattern in a column." },
+            { question: "Write a SQL query to find all students whose names start with 'A'.", answer: "SELECT * FROM students WHERE name LIKE 'A%';" },
+            { question: "How would you update a record in a table?", answer: "UPDATE table_name \nSET column1 = value1, column2 = value2, ...\nWHERE some_column = some_value;" },
+            { question: "How can you delete records from a table?", answer: "DELETE FROM table_name WHERE condition;" },
+            { question: "How do you drop a table?", answer: "DROP TABLE table_name;" },
+            { question: "What is the purpose of the ALTER table command?", answer: "To modify an existing table structure, such as adding, deleting, or modifying columns." },
+            { question: "How would you add a new column email to the students table?", answer: "ALTER TABLE students ADD COLUMN email VARCHAR(255);" },
+            { question: "What does the DISTINCT keyword do in a SQL query?", answer: "It removes duplicate rows from the result set." },
+            { question: "Write a query to find the total number of distinct courses from the enrollments table.", answer: "SELECT COUNT(DISTINCT course_id) FROM enrollments;" },
+            { question: "What does the EXISTS operator do?", answer: "It tests for the existence of any record in a subquery." },
+            { question: "Write a SQL query to find students who have enrolled in a course.", answer: "SELECT student_id \nFROM students \nWHERE EXISTS (SELECT 1 FROM enrollments WHERE students.student_id = enrollments.student_id);" },
+            { question: "How can you concatenate columns in MySQL?", answer: "Using the CONCAT() function." },
+            { question: "Write a query to get the full name of a student, given first_name and last_name columns.", answer: "SELECT CONCAT(first_name, ' ', last_name) as full_name FROM students;" },
+            { question: "How do you find the total number of rows in a table?", answer: "SELECT COUNT(*) FROM table_name;" },
+            { question: "How can you fetch the first 5 records from a table?", answer: "SELECT * FROM table_name LIMIT 5;" },
+            { question: "What is the difference between CHAR and VARCHAR data types?", answer: "CHAR is fixed-length while VARCHAR is variable-length." },
+            { question: "How can you change the data type of a column?", answer: "ALTER TABLE table_name MODIFY column_name NEW_DATA_TYPE;" },
+            { question: "Write a SQL query to find the 3rd highest salary from a salaries table.", answer: "SELECT DISTINCT salary \nFROM salaries \nORDER BY salary DESC \nLIMIT 1 OFFSET 2;" },
+            { question: "How do you create a primary key in a table?", answer: "ALTER TABLE table_name ADD PRIMARY KEY (column_name);" },
+            { question: "What is a foreign key constraint, and why is it used?", answer: "A foreign key constraint establishes a link between two tables and ensures that records in one table correspond to records in another. It's used to maintain referential integrity in the database." },
+            { question: "How can you add a foreign key constraint to an existing table?", answer: "ALTER TABLE table_name ADD FOREIGN KEY (column_name) REFERENCES other_table(other_column);" },
+            { question: "How can you retrieve the unique values from a column?", answer: "SELECT DISTINCT column_name FROM table_name;" },
+            { question: "What is the difference between an INNER JOIN and a LEFT JOIN?", answer: "An INNER JOIN returns rows when there is a match in both tables, while a LEFT JOIN returns all rows from the left table and the matched rows from the right table. If there's no match, the result is NULL on the right side." },
+            { question: "What is normalization, and why is it important?", answer: "Normalization is the process of organizing a database to reduce redundancy and ensure data integrity. It divides larger tables into smaller ones and establishes relationships between them using foreign keys." },
+            { question: "Describe 1NF, 2NF, and 3NF in database normalization.", answer: "1NF (First Normal Form): Each table has a primary key, and all attributes are atomic (no repeating groups or arrays).\n2NF (Second Normal Form): All non-key attributes are fully functionally dependent on the primary key.\n3NF (Third Normal Form): All attributes are functionally dependent only on the primary key." },
+            { question: "What is a subquery, and how is it different from a JOIN?", answer: "A subquery is a query nested inside another query. A subquery can return data that will be used in the main query as a condition. A JOIN is used to combine rows from two or more tables based on a related column." },
+            { question: "Write a query to find employees whose salary is above the average salary.", answer: "SELECT employee_name, salary \nFROM employees \nWHERE salary > (SELECT AVG(salary) FROM employees);" },
+            { question: "What is a stored procedure in MySQL?", answer: "A stored procedure is a precompiled group of SQL statements stored in the database. It can be invoked as needed." },
+            { question: "How can you handle errors in stored procedures?", answer: "In MySQL, you can use the DECLARE statement to define error handlers using CONTINUE or EXIT handlers." },
+            { question: "How do you prevent SQL injection in your queries?", answer: "Use parameterized queries or prepared statements, avoid constructing queries with string concatenation using external input, and always validate and sanitize user input." },
+            { question: "What are TRIGGERS in MySQL?", answer: "Triggers are automatic actions that the database can perform when a specified change occurs (like an INSERT, UPDATE, or DELETE operation)." },
+            { question: "Can you explain the difference between CHAR_LENGTH and LENGTH functions?", answer: "CHAR_LENGTH returns the number of characters in a string, while LENGTH returns the number of bytes. For single-byte character sets, they return the same value." },
+            { question: "What is the purpose of the GROUP_CONCAT function in MySQL?", answer: "GROUP_CONCAT returns a concatenated string of aggregated data values for each group of rows in the result set." },
+            { question: "Write a SQL query to concatenate all names from the employees table into a single string, separated by commas.", answer: "SELECT GROUP_CONCAT(employee_name) FROM employees;" },
+            { question: "How can you create an index in MySQL?", answer: "CREATE INDEX index_name ON table_name(column_name);" },
+            { question: "What is the difference between a clustered and a non-clustered index?", answer: "A clustered index determines the physical order of data in a table. A table can have only one clustered index. Non-clustered indexes, on the other hand, do not determine the physical order and a table can have multiple non-clustered indexes." },
+            { question: "What are views in MySQL, and why are they used?", answer: "A view is a virtual table based on the result-set of an SQL statement. They allow encapsulating complex queries, providing a simplified representation or hiding certain data." },
+            { question: "What are transactions in MySQL?", answer: "Transactions are a sequence of one or more SQL operations executed as a single unit. They ensure data integrity, following the ACID properties (Atomicity, Consistency, Isolation, Durability)." },
+            { question: "How do you start and commit a transaction in MySQL?", answer: "START TRANSACTION;-- SQL operations\nCOMMIT;" },
+            { question: "What is the difference between UNION and UNION ALL?", answer: "UNION returns unique records from the combined dataset, while UNION ALL returns all records, including duplicates." },
+            { question: "What are the advantages of using stored procedures?", answer: "They provide better performance as they are precompiled, help in modular programming, offer a security mechanism, and reduce network traffic." },
+            { question: "What is the difference between DATEDIFF and TIMESTAMPDIFF in MySQL?", answer: "Both are used to find the difference between two dates, but TIMESTAMPDIFF allows for a more specific interval, like month or year, while DATEDIFF returns the difference in days." },
+            { question: "How do you clone a table in MySQL?", answer: "CREATE TABLE new_table AS SELECT * FROM existing_table;" },
+            { question: "Write a SQL query to rank employees based on their salary in descending order.", answer: "SELECT employee_name, salary, RANK() OVER(ORDER BY salary DESC) AS ranking FROM employees;" },
+            { question: "How do you remove duplicate rows in a table?", answer: "One common way is to create a new table with the distinct rows and delete the original table:\nCREATE TABLE new_table AS SELECT DISTINCT * FROM original_table;\nDROP TABLE original_table;\nRENAME TABLE new_table TO original_table;" },
+            { question: "What are the default storage engines in MySQL?", answer: "The default storage engine was MyISAM up to MySQL 5.5, but InnoDB became the default from MySQL 5.5 onward." },
+            { question: "What is the purpose of the SET data type in MySQL?", answer: "The SET type is used to store a set of strings. You can store zero or more string values chosen from a list defined at table creation time.\nCREATE TABLE t1 (colors SET('red', 'blue', 'green'));\nINSERT INTO t1 (colors) VALUES ('red,blue');" },
+            { question: "How do you implement pagination in MySQL?", answer: "Using LIMIT and OFFSET.\nSELECT * FROM table_name LIMIT 10 OFFSET 20;  -- Skips the first 20 records and fetches the next 10." },
+            { question: "How can you retrieve the month part from a DATE field in MySQL?", answer: "Using the MONTH() function.\nSELECT MONTH(date_column) FROM table_name;" },
+            { question: "How do you convert a DATETIME field into a Unix timestamp?", answer: "Using the UNIX_TIMESTAMP() function.\nSELECT UNIX_TIMESTAMP(datetime_column) FROM table_name;" },
+            { question: "How can you perform a case-sensitive search in a column?", answer: "Using the BINARY keyword.\nSELECT * FROM table_name WHERE BINARY column_name = 'Value';" },
+            { question: "How can you transpose rows into columns, and vice versa, in a query result?", answer: "This process is known as \"Pivoting\". To convert rows to columns, you use a combination of aggregate functions with CASE statements. For the reverse, known as \"Unpivoting\", you can use UNION ALL.\n-- Pivoting:\nSELECT \n    SUM(CASE WHEN column = 'value1' THEN 1 ELSE 0 END) AS 'Value1',\n    SUM(CASE WHEN column = 'value2' THEN 1 ELSE 0 END) AS 'Value2'\nFROM table_name;\n-- Unpivoting:\nSELECT 'Value1' AS 'Column', Value1 AS 'Value' FROM table_name\nUNION ALL\nSELECT 'Value2' AS 'Column', Value2 AS 'Value' FROM table_name;" },
+            { question: "How can you get a list of all indexes in a database?", answer: "SHOW INDEXES FROM table_name IN database_name;" },
+            { question: "How can you optimize a MySQL query?", answer: "Some methods include using EXPLAIN to analyze the query plan, indexing appropriate columns, avoiding the use of wildcard characters at the start of a LIKE query, and avoiding the use of SELECT *." },
+            { question: "What is the difference between MyISAM and InnoDB?", answer: "Major differences include:\nInnoDB supports ACID-compliant transactions, whereas MyISAM does not.\nInnoDB supports foreign key constraints, while MyISAM does not.\nMyISAM typically offers better read performance, while InnoDB offers better write performance." },
+            { question: "How can you lock a table explicitly?", answer: "LOCK TABLES table_name READ|WRITE; --Lock for reading/writing\nUNLOCK TABLES; --To release the lock" },
+            { question: "How do you get the second highest value from a table column?", answer: "SELECT MAX(column_name) FROM table_name WHERE column_name < (SELECT MAX(column_name) FROM table_name);" },
+            { question: "What is a correlated subquery?", answer: "A correlated subquery is a subquery that references columns from the outer query. It's executed once for each row processed by the outer query.\nSELECT column_name FROM table_name t1\nWHERE some_value = (SELECT MAX(column_name) FROM table_name t2 WHERE t1.id = t2.id);" },
+            { question: "How can you increase the performance of a MySQL database?", answer: "Optimize queries using EXPLAIN, use indexes wisely, normalize database schema, consider hardware upgrades, and configure database parameters appropriately in my.cnf or my.ini." },
+            { question: "How do you backup and restore a MySQL database?", answer: "To backup:\nmysqldump -u username -p database_name > backup.sql\n\nTo restore:\nmysql -u username -p database_name < backup.sql" },
+            { question: "What are the different types of MySQL collations?", answer: "Collations specify the rules for string comparison. There are various types like utf8_general_ci, utf8mb4_unicode_ci, and latin1_general_ci." },
+            { question: "How do you find the total number of rows affected by a query?", answer: "SELECT ROW_COUNT();" },
+            { question: "How can you measure the size of a MySQL database?", answer: "SELECT table_schema AS \"Database\", ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS \"Size (MB)\" FROM information_schema.TABLES GROUP BY table_schema;" },
+            { question: "How can you delete all records from a table without deleting the table?", answer: "TRUNCATE TABLE table_name;" },
+            { question: "How do you combine results from multiple SQL queries and return a single table?", answer: "You can use the UNION or UNION ALL operator, depending on whether or not you want duplicate records." },
+            { question: "How can you convert a string to upper-case in MySQL?", answer: "SELECT UPPER(column_name) FROM table_name;" },
+            { question: "How can you remove leading and trailing whitespace from a string in MySQL?", answer: "SELECT TRIM(column_name) FROM table_name;" },
+            { question: "Explain the purpose of information_schema in MySQL.", answer: "information_schema is a meta-database that provides detailed information about all other databases, tables, columns, indexes, constraints, etc. present in the MySQL server." },
+            { question: "How can you ensure that a field value is unique across the table, other than using the PRIMARY KEY constraint?", answer: "Use the UNIQUE constraint on the desired column.\nALTER TABLE table_name ADD UNIQUE (column_name);" },
+            { question: "How can you count the total number of tables in a database?", answer: "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'your_database_name';" },
+            { question: "How can you find all the tables that have a specific column name in a database?", answer: "SELECT table_name FROM information_schema.columns WHERE column_name = 'desired_column' AND table_schema = 'your_database_name';" },
+            { question: "How can you replace a specific string in a field?", answer: "UPDATE table_name SET column_name = REPLACE(column_name, 'old_string', 'new_string');" },
+            { question: "What is the difference between NOW() and CURDATE() functions in MySQL?", answer: "NOW() returns the current date and time, while CURDATE() returns only the current date." },
+            { question: "Explain the WITH clause and provide an example.", answer: "The WITH clause, also known as Common Table Expressions (CTE), provides a temporary result set that you can reference within a SELECT, INSERT, UPDATE, or DELETE statement. It's useful for breaking down complex queries.\nWITH CTE_Name AS (\n    SELECT column1, column2\n    FROM table_name\n    WHERE condition\n)\nSELECT * FROM CTE_Name;" },
+            { question: "What is a self-join and why would you use it?", answer: "A self-join is a join where a table is joined with itself. It's useful for finding relationships within the same table.\nSELECT A.column_name, B.column_name FROM table_name A, table_name B WHERE A.column_name = B.column_name;" },
+            { question: "What are the different types of subqueries? Explain with examples.", answer: "There are three types:\nScalar subquery: Returns a single value.\nSELECT column_name FROM table_name WHERE another_column = (SELECT MAX(column_name) FROM table_name);\n\nRow subquery: Returns a single row.\nSELECT column1, column2 FROM table_name WHERE (column1, column2) = (SELECT column1, column2 FROM another_table WHERE condition);\n\nTable subquery: Returns a table.\nSELECT column_name FROM (\n  SELECT column_name FROM table_name WHERE condition\n) AS subquery_name;" },
+            { question: "How can you update data in one table based on data in another table?", answer: "UPDATE table1\nSET table1.column_name = table2.column_name\nFROM table2\nWHERE table1.another_column = table2.another_column;" },
+            { question: "How can you retrieve a random row from a table?", answer: "SELECT column_name FROM table_name ORDER BY RAND() LIMIT 1;" },
+            { question: "What's the difference between INNER JOIN and OUTER JOIN?", answer: "INNER JOIN returns rows when there's a match in both tables. OUTER JOIN returns all rows from one table and the matching rows from the other table, filling with NULL if no match is found." },
+            { question: "How do you insert multiple rows in a single SQL query?", answer: "INSERT INTO table_name (column1, column2) VALUES (value1a, value2a), \n       (value1b, value2b), \n       ...;" },
+            { question: "Explain partitions in MySQL. How do you create them?", answer: "Partitioning divides a table into smaller, more manageable pieces, yet still being treated as a single table. It can improve performance and assist in organizing large datasets.\nCREATE TABLE table_name (\n   column_name1 INT,\n   column_name2 DATE\n)\nPARTITION BY RANGE(YEAR(column_name2)) (\n   PARTITION p0 VALUES LESS THAN (1991),\n   PARTITION p1 VALUES LESS THAN (1995),\n   PARTITION p2 VALUES LESS THAN (1999)\n);" },
+            { question: "How can you prevent SQL injection in your queries?", answer: "Using parameterized queries or prepared statements. In PHP, for instance, you'd use PDO or MySQLi to bind parameters." },
+            { question: "How do you show the current SQL mode, and how can you change it?", answer: "SELECT @@sql_mode;  -- To show\nSET sql_mode = 'modes';  -- To change" },
+            { question: "What are the differences between VARCHAR and TEXT data types?", answer: "While both are used to store strings, VARCHAR can store up to 65,535 characters and you can specify its max length, while TEXT can store up to 65,535 characters without specifying max length. VARCHAR can have a default value, but TEXT cannot." },
+            { question: "How do you find and fix broken foreign key constraints?", answer: "Identify them using a LEFT JOIN to find orphaned records, and either delete these records or update them to restore referential integrity." },
+            { question: "How do you use FULLTEXT indexing in MySQL?", answer: "FULLTEXT indexes are used for full-text searches. You can create one with:\nCREATE FULLTEXT INDEX index_name ON table_name(column_name);\n\nThen you'd search with:\nSELECT * FROM table_name WHERE MATCH(column_name) AGAINST('search term');" },
+            { question: "How can you check for index fragmentation on a table and defragment it?", answer: "You can check fragmentation using SHOW TABLE STATUS LIKE 'table_name'; and optimize (defragment) using OPTIMIZE TABLE table_name;." },
+            { question: "How can you convert character sets in columns?", answer: "ALTER TABLE table_name MODIFY column_name COLUMN_TYPE CHARACTER SET charset_name;" },
+            { question: "How do you schedule a recurring SQL script execution in MySQL?", answer: "Using MySQL's Event Scheduler. First, ensure the scheduler is on with SHOW VARIABLES LIKE 'event_scheduler';, then create your scheduled event." },
+            { question: "How would you monitor the performance of your MySQL database in real-time?", answer: "Tools like SHOW PROCESSLIST, Performance Schema, MySQL Enterprise Monitor, and third-party tools like Percona Monitoring and Management." },
+            { question: "How can you run SQL script from the command line without entering the MySQL console?", answer: "Use:\nmysql -u username -p database_name < script.sql" },
+            { question: "What is the EXPLAIN keyword in MySQL?", answer: "EXPLAIN provides a query execution plan, showing how MySQL will execute the query, which can be vital for optimization." },
+            { question: "How do you enforce a column to not accept NULL values?", answer: "By adding the NOT NULL constraint during table creation or modification." },
+            { question: "How do you rename a database in MySQL?", answer: "MySQL does not have a straightforward command to rename a database. Instead, one common approach is to dump the database, create a new one with the desired name, and then restore the dumped database into the new one." },
+            { question: "How can you reset the auto-increment value of a column?", answer: "ALTER TABLE table_name AUTO_INCREMENT = value;" },
+            { question: "How can you handle time zones in MySQL?", answer: "MySQL provides the CONVERT_TZ() function to convert datetime values across time zones. Additionally, SET time_zone = timezone; sets the time zone for the current session." },
+            { question: "How do you retrieve only a specified number of characters from a string column?", answer: "SELECT LEFT(column_name, number_of_chars) FROM table_name;" },
+            { question: "How do you find the second highest value in a column?", answer: "SELECT MAX(column_name) FROM table_name WHERE column_name NOT IN (SELECT MAX(column_name) FROM table_name);" }
+        ];
+
+        // DOM Elements
+        const progressText = document.getElementById('progress-text');
+        const completionText = document.getElementById('completion-text');
+        const progressBar = document.getElementById('progress-bar');
+        
+        const questionText = document.getElementById('question-text');
+        const answerWrapper = document.getElementById('answer-wrapper');
+        const answerText = document.getElementById('answer-text');
+
+        const toggleAnswerBtn = document.getElementById('toggle-answer-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        // App State
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let answeredQuestions = new Set();
+
+        // Event Listeners
+        window.addEventListener('DOMContentLoaded', startQuiz);
+        toggleAnswerBtn.addEventListener('click', toggleAnswer);
+        prevBtn.addEventListener('click', showPreviousQuestion);
+        nextBtn.addEventListener('click', showNextQuestion);
+        
+        function startQuiz() {
+            questions = questionsData;
+            currentQuestionIndex = 0;
+            answeredQuestions = new Set();
+            displayQuestion();
+            updateProgress();
+        }
+        
+        function displayQuestion() {
+            if (questions.length === 0) return;
+            
+            const { question, answer } = questions[currentQuestionIndex];
+            questionText.textContent = question;
+            answerText.textContent = answer;
+            
+            // Reset answer view
+            answerWrapper.classList.add('hidden');
+            toggleAnswerBtn.textContent = 'Show Answer';
+            
+            // Update navigation buttons state
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.disabled = currentQuestionIndex === questions.length - 1;
+        }
+
+        function toggleAnswer() {
+            const isHidden = answerWrapper.classList.toggle('hidden');
+            toggleAnswerBtn.textContent = isHidden ? 'Show Answer' : 'Hide Answer';
+
+            if (!isHidden) {
+                // If answer is shown, mark question as answered
+                if (!answeredQuestions.has(currentQuestionIndex)) {
+                    answeredQuestions.add(currentQuestionIndex);
+                    updateProgress();
+                }
+            }
+        }
+
+        function showPreviousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                displayQuestion();
+                updateProgressText();
+            }
+        }
+        
+        function showNextQuestion() {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                displayQuestion();
+                updateProgressText();
+            }
+        }
+
+        function updateProgress() {
+            updateProgressText();
+            const completionPercentage = (answeredQuestions.size / questions.length) * 100;
+            progressBar.style.width = `${completionPercentage}%`;
+            completionText.textContent = `${Math.round(completionPercentage)}% Complete`;
+        }
+
+        function updateProgressText() {
+             progressText.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+        }
+    </script>
+</body>
+</html>
+
+
